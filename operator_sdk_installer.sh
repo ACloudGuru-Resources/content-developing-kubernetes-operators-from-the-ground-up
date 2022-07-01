@@ -19,6 +19,6 @@ sleep 3
 systemctl stop docker
 sleep 5
 systemctl enable docker
-usermod -aG docker clud_user
+usermod -aG docker cloud_user
 systemctl start docker
 su - cloud_user -c 'kind create cluster --name guru-test-cluster'
