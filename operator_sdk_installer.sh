@@ -16,4 +16,9 @@ chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
 sleep 3
 
 ### Start kind cluster ###
-kind create cluster --name guru-test-cluster
+systemctl start docker
+sleep 5
+sudo systemctl enable docker
+su -c 'usermod -aG docker $USER'
+su -c 'newgrp docker'
+su -c 'kind create cluster --name guru-test-cluster'
