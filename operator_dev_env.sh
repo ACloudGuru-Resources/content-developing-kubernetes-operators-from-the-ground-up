@@ -20,8 +20,11 @@ mv kubectl /usr/local/bin/
 sleep 3
 
 ### Install kind ###
-su - cloud_user -c 'go install sigs.k8s.io/kind@v0.16.0'
-su - cloud_user -c 'cp go/bin/kind /usr/local/bin/'
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-linux-amd64
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-linux-amd64
+sudo mv ./kind /usr/local/bin/kind
+#su - cloud_user -c 'go install sigs.k8s.io/kind@v0.16.0'
+#su - cloud_user -c 'cp go/bin/kind /usr/local/bin/'
 ### Start kind Cluster and change context ###
 su - cloud_user -c 'kind create cluster --name operator-dev'
 su - cloud_user -c 'kubectl cluster-info --context kind-operator-dev'
