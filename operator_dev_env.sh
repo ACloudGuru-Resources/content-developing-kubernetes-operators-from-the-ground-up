@@ -21,7 +21,7 @@ sleep 3
 
 ### Install kind ###
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-linux-amd64
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-linux-amd64
+chmod +x ./kind
 sudo mv ./kind /usr/local/bin/kind
 #su - cloud_user -c 'go install sigs.k8s.io/kind@v0.16.0'
 #su - cloud_user -c 'cp go/bin/kind /usr/local/bin/'
