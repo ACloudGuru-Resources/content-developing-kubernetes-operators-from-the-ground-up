@@ -41,6 +41,6 @@ su - cloud_user -c 'kubectl cluster-info --context kind-operator-dev'
 
 sleep 10
 
-su - cloud_user -c 'mkdir -p $HOME/projects/my-first-operator'
-su - cloud_user -c 'cd $HOME/projects/my-first-operator'
+su - cloud_user -c 'mkdir -p $HOME/projects/memcached-operator'
+su - cloud_user -c 'cd /projects/memcached-operator'
 su - cloud_user -c 'operator-sdk init --domain example.com --repo github.com/example/memcached-operator'
