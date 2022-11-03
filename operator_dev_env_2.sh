@@ -37,9 +37,3 @@ sudo mv ./kind /usr/local/bin/kind
 ### Start kind Cluster and change context ###
 su - cloud_user -c 'kind create cluster --name operator-dev'
 su - cloud_user -c 'kubectl cluster-info --context kind-operator-dev'
-
-sleep 3
-
-su - cloud_user -c 'mkdir -p $HOME/projects/memcached-operator'
-su - cloud_user -c 'cd /home/cloud_user/projects/memcached-operator'
-su - cloud_user -c 'operator-sdk init --domain example.com --repo github.com/example/memcached-operator'
