@@ -1,0 +1,92 @@
+# Lab 1 - Setting Up Your Environment for Developing Kubernetes Operators
+
+## Install Docker
+sudo yum -y install docker
+sudo usermod -a -G docker cloud_user
+newgrp docker
+sudo systemctl enable docker.service
+sudo systemctl start docker.service
+
+## Install Go
+sudo yum -y install go
+
+## Install kubectl
+curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.7/2022-06-29/bin/linux/amd64/kubectl
+chmod +x kubectl
+cp kubectl /usr/local/bin/ 
+
+## Install Kind
+go install sigs.k8s.io/kind@v0.16.0
+sudo cp go/bin/kind /usr/local/bin/
+kind create cluster --name operator-dev
+kubectl cluster-info --context kind-operator-dev
+ 
+
+## Install Operator SDK and enable OLM
+export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+export OS=$(uname | awk '{print tolower($0)}')
+export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.24.1
+curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
+chmod +x operator-sdk_${OS}_${ARCH} && sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
+operator-sdk olm install
+
+## Login to docker hub
+docker login
+
+
+# Lab 2 - Creating the Project for Your First Kubernetes Operator
+
+## Create the Operator project directory:
+mkdir -p projects/memcached-operator
+
+## Move into the project directory
+cd projects/memcached-operator
+
+## Enable the Go Modules
+export GO111MODULE=on
+
+## Create the Operator project
+operator-sdk init --domain=example.com --repo=github.com/example-inc/memcached-operator
+
+
+# Lab 3 - Creating the API for Your First Kubernetes Operator
+
+## Create the API
+operator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller
+
+## Define the API
+vim api/v1alpha1/memcached_types.go
+
+## Add to MemcachedSpec struct:
+// +kubebuilder:validation:Minimum=1
+// +kubebuilder:validation:Maximum=3
+// +kubebuilder:validation:ExclusiveMaximum=false
+Size int32 `json:"size,omitempty"`
+
+## Update code:
+make generate
+
+## Generate CRD Manifests:
+make manifests
+
+
+# Lab 4 - Creating the Controller for Your First Kubernetes Operator
+
+## Replace controller.go file:
+wget https://raw.githubusercontent.com/ACloudGuru/content-developing-kubernetes-operators-from-the-ground-up/main/memcached_controller.go
+mv memcached_controller.go controllers/memcached_controller.go
+
+## Modify the memcached_controller.go file
+vim controllers/memcached_controller.go
+
+## Go to end of the file:
+:$
+
+## Add the max number of concurrent reconciles for the controller to 2 after Own int the func (r *MemcachedReconciler) SetupWithManager configuration:
+WithOptions(controller.Options{MaxConcurrentReconciles: 2}).
+
+## Make sure we have permissions specified by checking the RBAC markers search and scroll up:
+/Reconcile(ctx
+
+## Generate the RBAC manifests:
+make manifests
