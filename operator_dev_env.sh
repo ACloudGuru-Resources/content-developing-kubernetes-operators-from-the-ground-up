@@ -10,7 +10,9 @@ systemctl start docker.service
 sleep 3
 
 ### Install GO ###
-yum -y install go
+wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
+chmod +x /usr/local/go
 
 ### Install kubectl ###
 curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.7/2022-06-29/bin/linux/amd64/kubectl
