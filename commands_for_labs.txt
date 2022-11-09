@@ -8,7 +8,10 @@ sudo systemctl enable docker.service
 sudo systemctl start docker.service
 
 ## Install Go
-sudo yum -y install go
+wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
+sudo chmod +x /usr/local/go
+export PATH=$PATH:/usr/local/go/bin
 
 ## Install kubectl
 curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.7/2022-06-29/bin/linux/amd64/kubectl
@@ -25,7 +28,7 @@ kubectl cluster-info --context kind-operator-dev
 ## Install Operator SDK and enable OLM
 export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
 export OS=$(uname | awk '{print tolower($0)}')
-export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.24.1
+export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.25.0
 curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
 chmod +x operator-sdk_${OS}_${ARCH} && sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
 operator-sdk olm install
@@ -34,7 +37,7 @@ operator-sdk olm install
 docker login
 
 
-# Lab 2 - Creating the Project for Your First Kubernetes Operator
+# Lab 2 - Creating Your First Kubernetes Operator
 
 ## Create the Operator project directory:
 mkdir -p projects/memcached-operator
@@ -43,25 +46,21 @@ mkdir -p projects/memcached-operator
 cd projects/memcached-operator
 
 ## Enable the Go Modules
+export PATH=$PATH:/usr/local/go/bin
 export GO111MODULE=on
 
 ## Create the Operator project
 operator-sdk init --domain=example.com --repo=github.com/example-inc/memcached-operator
 
-
-# Lab 3 - Creating the API for Your First Kubernetes Operator
-
-## Create the API
-operator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller
+## Create the APIoperator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller
+operator-sdk create api --group cache --version v1alpha1 --kind Memcached --plugins="deploy-image/v1-alpha" --image=memcached:1.4.36-alpine --image-container-command="memcached,-m=64,modern,-v" --run-as-user="1001"
 
 ## Define the API
 vim api/v1alpha1/memcached_types.go
-
-## Add to MemcachedSpec struct:
-// +kubebuilder:validation:Minimum=1
+Change from:
 // +kubebuilder:validation:Maximum=3
-// +kubebuilder:validation:ExclusiveMaximum=false
-Size int32 `json:"size,omitempty"`
+To:
+// +kubebuilder:validation:Maximum=5
 
 ## Update code:
 make generate
@@ -69,24 +68,44 @@ make generate
 ## Generate CRD Manifests:
 make manifests
 
+## Log into Docker Hub (Must make an account. Use link that is provided.)
+docker login
 
-# Lab 4 - Creating the Controller for Your First Kubernetes Operator
+## Export your operator image
+export IMG=docker.io/<your_username>/<operator_name>:v0.0.1
 
-## Replace controller.go file:
-wget https://raw.githubusercontent.com/ACloudGuru/content-developing-kubernetes-operators-from-the-ground-up/main/memcached_controller.go
-mv memcached_controller.go controllers/memcached_controller.go
+## Make the memcached-operator-system your current namespace
+kubectl config set-context --current --namespace=memcached-operator-system
 
-## Modify the memcached_controller.go file
-vim controllers/memcached_controller.go
+## Make the operator image
+make docker-build IMG=$IMG
 
-## Go to end of the file:
-:$
+## Push your operator image to docker hub
+make docker-push IMG=$IMG
 
-## Add the max number of concurrent reconciles for the controller to 2 after Own int the func (r *MemcachedReconciler) SetupWithManager configuration:
-WithOptions(controller.Options{MaxConcurrentReconciles: 2}).
+## Deploy your Operator
+make deploy IMG=$IMG
 
-## Make sure we have permissions specified by checking the RBAC markers search and scroll up:
-/Reconcile(ctx
+## Check the deployment
+kubectl get deployment
 
-## Generate the RBAC manifests:
-make manifests
+## Create a Memcached Custom Resource
+## Edit the cache_v1alpha1_memcached.yaml file and change the size to 3
+vim config/samples/cache_v1alpha1_memcached.yaml
+
+## Apply the CR
+kubectl apply -f config/samples/cache_v1alpha1_memcached.yaml
+
+## Check the deployment
+kubectl get deployment
+kubectl get pods
+
+## Change the Size of the deployment from to 5
+vim config/samples/cache_v1alpha1_memcached.yaml
+
+## Apply the changes
+kubectl apply -f config/samples/cache_v1alpha1_memcached.yaml
+
+## Check the deployment
+kubectl get deployment
+kubectl get pods
