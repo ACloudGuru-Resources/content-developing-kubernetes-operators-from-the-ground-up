@@ -52,7 +52,7 @@ export GO111MODULE=on
 ## Create the Operator project
 operator-sdk init --domain=example.com --repo=github.com/example-inc/memcached-operator
 
-## Create the APIoperator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller
+## Create the API and Controller
 operator-sdk create api --group cache --version v1alpha1 --kind Memcached --plugins="deploy-image/v1-alpha" --image=memcached:1.4.36-alpine --image-container-command="memcached,-m=64,modern,-v" --run-as-user="1001"
 
 ## Define the API
