@@ -10,8 +10,8 @@ systemctl start docker.service
 sleep 3
 
 ### Install GO ###
-wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
-rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
 chmod +x /usr/local/go
 su - cloud_user -c 'export PATH=$PATH:/usr/local/go/bin'
 
